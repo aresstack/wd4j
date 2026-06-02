@@ -50,6 +50,33 @@ The Gradle build creates the normal JAR, sources JAR, Javadoc JAR, Maven POM, an
 - `org.java-websocket:Java-WebSocket:1.5.2`
 - `org.reflections:reflections:0.10.2`
 
+
+## Navigation queue
+
+`WDBrowsingContextManager.navigate(...)` now routes `browsingContext.navigate` commands through a per-context navigation queue by default. This keeps navigation commands for the same browsing context serialized while still allowing different browsing contexts to navigate independently.
+
+The default queue is intentionally small and compatibility-focused:
+
+```bash
+-Dwd4j.navigation.queue.enabled=true
+-Dwd4j.navigation.queue.quietPeriodMs=0
+```
+
+For Firefox/GeckoDriver scenarios that react badly to rapid navigation bursts, add a small quiet period between navigation commands for the same context:
+
+```bash
+-Dwd4j.navigation.queue.quietPeriodMs=100
+```
+
+For custom integration code, inject a queue explicitly:
+
+```java
+WDNavigationQueue navigationQueue = WDNavigationQueues.serial(100L);
+WebDriver driver = new WebDriver(webSocket, dispatcher, navigationQueue);
+```
+
+Set `wd4j.navigation.queue.enabled=false` only when the caller already guarantees browser-compatible navigation pacing.
+
 ## Browser compatibility notes
 
 WebDriver BiDi is still a moving target across browser implementations. WD4J keeps the wire model close to the W3C protocol, but browser-specific behavior can still differ.
@@ -64,7 +91,7 @@ Known limitations observed during development:
 
 - `session.unsubscribe` can be problematic in Firefox/GeckoDriver depending on the exact browser and driver version. WD4J first tries unsubscribe by subscription ID and falls back to unsubscribe by attributes when the ID-based request fails.
 - The current W3C draft defines `session.unsubscribe` as a union of unsubscribe-by-ID and unsubscribe-by-attributes. The ID variant uses `subscriptions`; the attributes variant currently uses `events`. WD4J still contains a deprecated optional `contexts` field for compatibility with older implementations.
-- Firefox was observed to hang during navigation when many navigations were sent in rapid succession. Prefer serial navigation, avoid flooding the browser with overlapping `browsingContext.navigate` commands, and consider using `WDReadinessState.NONE` or `WDReadinessState.INTERACTIVE` when full page-load waiting is not required.
+- Firefox was observed to hang during navigation when many navigations were sent in rapid succession. WD4J now serializes `browsingContext.navigate` commands per browsing context by default. For especially sensitive Firefox/GeckoDriver setups, configure `-Dwd4j.navigation.queue.quietPeriodMs=100` and consider using `WDReadinessState.NONE` or `WDReadinessState.INTERACTIVE` when full page-load waiting is not required.
 
 ## License
 

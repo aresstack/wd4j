@@ -4,8 +4,9 @@ import com.aresstack.api.WDWebSocket;
 import com.aresstack.api.WDWebSocketManager;
 import com.aresstack.command.response.WDSessionResult;
 import com.aresstack.manager.*;
-import com.aresstack.manager.*;
 import com.aresstack.service.WDEventDispatcher;
+import com.aresstack.support.navigation.WDNavigationQueue;
+import com.aresstack.support.navigation.WDNavigationQueues;
 import com.aresstack.type.session.WDCapabilitiesRequest;
 import com.aresstack.type.session.WDSubscription;
 import com.aresstack.type.session.WDSubscriptionRequest;
@@ -52,7 +53,7 @@ public class WebDriver {
     }
 
     /**
-     * Creates a WebDriver with any WDWebSocket implementation (Firefox BiDi direct or Chrome BiDi via CDP mapper).
+     * Create a WebDriver with any WDWebSocket implementation (Firefox BiDi direct or Chrome BiDi via CDP mapper).
      */
     public WebDriver(WDWebSocket webSocket) throws ExecutionException, InterruptedException {
         this(webSocket, new WDEventDispatcher());
@@ -64,14 +65,21 @@ public class WebDriver {
     }
 
     /**
-     * Creates a WebDriver with any WDWebSocket implementation and a custom event dispatcher.
+     * Create a WebDriver with any WDWebSocket implementation and a custom event dispatcher.
      */
     public WebDriver(WDWebSocket webSocket, WDEventDispatcher dispatcher) throws ExecutionException, InterruptedException {
+        this(webSocket, dispatcher, WDNavigationQueues.fromSystemProperties());
+    }
+
+    /**
+     * Create a WebDriver with any WDWebSocket implementation, a custom event dispatcher, and a custom navigation queue.
+     */
+    public WebDriver(WDWebSocket webSocket, WDEventDispatcher dispatcher, WDNavigationQueue navigationQueue) throws ExecutionException, InterruptedException {
         this.webSocketManager = new WDWebSocketManagerImpl(webSocket);
 
         this.browser = new WDBrowserManager(webSocketManager);
         this.session = new WDSessionManager(webSocketManager);
-        this.browsingContext = new WDBrowsingContextManager(webSocketManager);
+        this.browsingContext = new WDBrowsingContextManager(webSocketManager, navigationQueue);
         this.script = new WDScriptManager(webSocketManager);
         this.input = new WDInputManager(webSocketManager);
         this.storage = new WDStorageManager(webSocketManager);
@@ -80,7 +88,7 @@ public class WebDriver {
         this.webExtension = new WDWebExtensionManager(webSocketManager);
 
         this.dispatcher = dispatcher;
-        webSocketManager.registerEventListener(dispatcher); // 🔥 Events aktivieren!
+        webSocketManager.registerEventListener(dispatcher);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +246,7 @@ public class WebDriver {
      * connection is no longer needed.
      */
     public void close() {
+        browsingContext.shutdown();
         webSocketManager.shutdown();
     }
 }

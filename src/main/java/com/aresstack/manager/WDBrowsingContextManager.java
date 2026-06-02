@@ -14,15 +14,30 @@ import com.aresstack.type.browsingContext.WDReadinessState;
 import com.aresstack.type.script.WDRemoteReference;
 import com.aresstack.type.script.WDSerializationOptions;
 import com.aresstack.api.WDWebSocketManager;
+import com.aresstack.support.navigation.WDNavigationQueue;
+import com.aresstack.support.navigation.WDNavigationQueues;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class WDBrowsingContextManager implements WDModule {
 
     private final WDWebSocketManager webSocketManager;
+    private final WDNavigationQueue navigationQueue;
 
     public WDBrowsingContextManager(WDWebSocketManager webSocketManager) {
+        this(webSocketManager, WDNavigationQueues.fromSystemProperties());
+    }
+
+    public WDBrowsingContextManager(WDWebSocketManager webSocketManager, WDNavigationQueue navigationQueue) {
+        if (webSocketManager == null) {
+            throw new IllegalArgumentException("webSocketManager must not be null.");
+        }
+        if (navigationQueue == null) {
+            throw new IllegalArgumentException("navigationQueue must not be null.");
+        }
         this.webSocketManager = webSocketManager;
+        this.navigationQueue = navigationQueue;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,10 +102,15 @@ public class WDBrowsingContextManager implements WDModule {
                 ? new WDBrowsingContextRequest.Navigate(url, contextId, readinessState)
                 : new WDBrowsingContextRequest.Navigate(url, contextId);
 
-        return webSocketManager.sendAndWaitForResponse(
-                command,
-                WDBrowsingContextResult.NavigateResult.class
-        );
+        return navigationQueue.submit(contextId, new Callable<WDBrowsingContextResult.NavigateResult>() {
+            @Override
+            public WDBrowsingContextResult.NavigateResult call() {
+                return webSocketManager.sendAndWaitForResponse(
+                        command,
+                        WDBrowsingContextResult.NavigateResult.class
+                );
+            }
+        });
     }
 
 
@@ -169,10 +189,14 @@ public class WDBrowsingContextManager implements WDModule {
      * @throws RuntimeException if the close operation fails.
      */
     public void close(String contextId) {
-        webSocketManager.sendAndWaitForResponse(
-                new WDBrowsingContextRequest.Close(contextId, null),
-                WDEmptyResult.class
-        );
+        try {
+            webSocketManager.sendAndWaitForResponse(
+                    new WDBrowsingContextRequest.Close(contextId, null),
+                    WDEmptyResult.class
+            );
+        } finally {
+            navigationQueue.discard(contextId);
+        }
     }
 
     /**
@@ -183,10 +207,14 @@ public class WDBrowsingContextManager implements WDModule {
      * @throws RuntimeException if the close operation fails.
      */
     public void close(String contextId, Boolean prompt) {
-        webSocketManager.sendAndWaitForResponse(
-                new WDBrowsingContextRequest.Close(contextId, prompt),
-                WDEmptyResult.class
-        );
+        try {
+            webSocketManager.sendAndWaitForResponse(
+                    new WDBrowsingContextRequest.Close(contextId, prompt),
+                    WDEmptyResult.class
+            );
+        } finally {
+            navigationQueue.discard(contextId);
+        }
     }
 
     /**
@@ -324,4 +352,8 @@ public class WDBrowsingContextManager implements WDModule {
                 WDBrowsingContextResult.TraverseHistoryResult.class
         );
     }
+    public void shutdown() {
+        navigationQueue.shutdown();
+    }
+
 }
