@@ -1,0 +1,123 @@
+diff -ruN a/.github/workflows/chatgpt-compatible-release.yml b/.github/workflows/chatgpt-compatible-release.yml
+--- a/.github/workflows/chatgpt-compatible-release.yml	1970-01-01 00:00:00.000000000 +0000
++++ b/.github/workflows/chatgpt-compatible-release.yml	2026-06-02 17:59:57.585901245 +0000
+@@ -0,0 +1,100 @@
++name: ChatGPT Compatible Release
++
++on:
++  push:
++    branches:
++      - main
++  workflow_dispatch:
++
++jobs:
++  build-chatgpt-compatible-zip:
++    runs-on: ubuntu-latest
++    permissions:
++      contents: write
++
++    steps:
++      - name: Check out sources
++        uses: actions/checkout@v4
++
++      - name: Set up Java 21 (Temurin)
++        uses: actions/setup-java@v4
++        with:
++          distribution: temurin
++          java-version: '21'
++
++      - name: Prepare Gradle dependency cache for ChatGPT
++        shell: bash
++        run: |
++          set -euo pipefail
++          export GRADLE_USER_HOME="$GITHUB_WORKSPACE/.chatgpt/gradle-home"
++          mkdir -p "$GRADLE_USER_HOME"
++          bash "$GITHUB_WORKSPACE/gradlew" --no-daemon --refresh-dependencies clean build
++
++      - name: Remove Gradle runtime state from packaged cache
++        shell: bash
++        run: |
++          set -euo pipefail
++          cache_dir="$GITHUB_WORKSPACE/.chatgpt/gradle-home"
++          rm -rf \
++            "$cache_dir/daemon" \
++            "$cache_dir/native" \
++            "$cache_dir/workers" \
++            "$cache_dir/notifications" \
++            "$cache_dir/caches/build-cache-*" \
++            "$cache_dir/caches/journal-*"
++          find "$cache_dir" -type f \( \
++            -name '*.lock' -o \
++            -name 'gc.properties' -o \
++            -name 'fileHashes.lock' -o \
++            -name 'executionHistory.lock' \
++          \) -delete
++
++      - name: Assemble ChatGPT compatible zip
++        shell: bash
++        run: |
++          set -euo pipefail
++          package_root="$RUNNER_TEMP/wd4j-chatgpt-package"
++          rm -rf "$package_root"
++          mkdir -p "$package_root/wd4j"
++
++          rsync -a \
++            --exclude '.git' \
++            --exclude 'build' \
++            --exclude '.gradle' \
++            --exclude '.idea' \
++            --exclude '*.iml' \
++            "$GITHUB_WORKSPACE/" "$package_root/wd4j/"
++
++          mkdir -p "$GITHUB_WORKSPACE/build"
++          (cd "$package_root" && zip -qr "$GITHUB_WORKSPACE/build/wd4j-chatgpt-compatible.zip" wd4j)
++
++      - name: Verify packaged build from fresh extraction
++        shell: bash
++        run: |
++          set -euo pipefail
++          verify_dir="$RUNNER_TEMP/wd4j-chatgpt-release-verify"
++          rm -rf "$verify_dir"
++          mkdir -p "$verify_dir"
++          unzip -q "$GITHUB_WORKSPACE/build/wd4j-chatgpt-compatible.zip" -d "$verify_dir"
++          cd "$verify_dir/wd4j"
++          chmod -x gradlew || true
++          bash chatgpt-build.sh
++          CHATGPT_FULL_GRADLE_BUILD=true bash chatgpt-build.sh
++
++      - name: Publish rolling release asset
++        env:
++          GH_TOKEN: ${{ github.token }}
++        shell: bash
++        run: |
++          set -euo pipefail
++          tag="chatgpt-compatible"
++          asset="build/wd4j-chatgpt-compatible.zip"
++
++          if ! gh release view "$tag" >/dev/null 2>&1; then
++            gh release create "$tag" \
++              --title "ChatGPT Compatible" \
++              --notes "Rolling ChatGPT-compatible source package with Gradle dependency cache."
++          fi
++
++          gh release delete-asset "$tag" "$(basename "$asset")" --yes || true
++          gh release upload "$tag" "$asset" --clobber
+diff -ruN a/chatgpt-build.sh b/chatgpt-build.sh
+--- a/chatgpt-build.sh	1970-01-01 00:00:00.000000000 +0000
++++ b/chatgpt-build.sh	2026-06-02 17:59:57.572459356 +0000
+@@ -0,0 +1,15 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++export GRADLE_USER_HOME="$ROOT_DIR/.chatgpt/gradle-home"
++
++mkdir -p "$GRADLE_USER_HOME"
++
++GRADLE_ARGS=(--no-daemon --offline)
++
++if [[ "${CHATGPT_FULL_GRADLE_BUILD:-false}" == "true" ]]; then
++  bash "$ROOT_DIR/gradlew" "${GRADLE_ARGS[@]}" clean build
++else
++  bash "$ROOT_DIR/gradlew" "${GRADLE_ARGS[@]}" testClasses
++fi
