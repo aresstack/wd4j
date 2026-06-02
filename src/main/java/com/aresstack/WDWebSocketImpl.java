@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 
 
 /**
- * ToDo: WebSocket & WebSockeFrames wurden hier fälschlicherweise eingesetzt. Sie sind für Verbindungen der Seite selbst gedacht,
- * nicht für DIE verbindung zum Browser über WebDriverBidi & WebSocket
+ * ToDo: WebSocket und WebSocket-Frames wurden hier fälschlicherweise eingesetzt. Sie sind für Verbindungen der Seite selbst gedacht,
+ * nicht für DIE verbindung zum Browser über WebDriver BiDi und WebSocket
  *
  */
 public class WDWebSocketImpl implements WDWebSocket {

@@ -37,7 +37,7 @@ public class WDStorageRequest {
 
     /**
      * The storage.setCookie command creates a new cookie in a cookie store, replacing any cookie in that store which
-     * matches according to {@link https://httpwg.org/specs/rfc6265.html [COOKIES]}.
+     * matches according to the HTTP cookie specification.
      */
     public static class SetCookie extends WDCommandImpl<SetCookieParameters> implements WDCommandData {
         public SetCookie(String contextId, SetCookieParameters.PartialCookie cookie) {

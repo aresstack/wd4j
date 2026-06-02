@@ -44,8 +44,9 @@ jobs:
           ORG_GRADLE_PROJECT_centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
+        shell: bash
         run: |
-          ./gradlew \
+          bash "$GITHUB_WORKSPACE/gradlew" \
             -PprojectVersion=${{ steps.ver.outputs.version }} \
             --no-daemon \
             -x test \

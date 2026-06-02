@@ -1,0 +1,233 @@
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 94fb677..b5e2184 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -44,8 +44,9 @@ jobs:
+           ORG_GRADLE_PROJECT_centralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
++        shell: bash
+         run: |
+-          ./gradlew \
++          bash "$GITHUB_WORKSPACE/gradlew" \
+             -PprojectVersion=${{ steps.ver.outputs.version }} \
+             --no-daemon \
+             -x test \
+diff --git a/README.md b/README.md
+index 7edfa11..8f9075d 100644
+--- a/README.md
++++ b/README.md
+@@ -1,40 +1,48 @@
+ # wd4j
+ 
+-`wd4j` contains the standalone Java 8 WebDriver BiDi bindings and WebSocket client helpers extracted from the `MainframeMate` Gradle multi-project build.
++`wd4j` contains standalone Java 8 WebDriver BiDi bindings and WebSocket client helpers extracted from the `MainframeMate` Gradle multi-project build.
++
++The library is implemented against the W3C WebDriver BiDi specification:
++
++<https://www.w3.org/TR/webdriver-bidi/>
+ 
+ ## Build
+ 
+ ```bash
+-./gradlew clean build
++bash ./gradlew clean build
+ ```
+ 
+-The project targets Java 8 bytecode. When Gradle runs on Java 9 or newer, compilation uses `--release 8`.
++For the ChatGPT-compatible release package, use the offline build script included in the ZIP:
++
++```bash
++bash ./chatgpt-build.sh
++```
++
++The project targets Java 8 bytecode. The Gradle build can run on a newer JDK and uses `--release 8` when the current compiler supports it.
+ 
+ ## Coordinates
+ 
+ Default Gradle coordinates are defined in `gradle.properties`:
+ 
+ ```properties
+-projectGroup=de.bund.zrb
++projectGroup=com.aresstack
+ projectVersion=5.4.0-SNAPSHOT
+ artifactId=wd4j
+ ```
+ 
+-Change `projectGroup` before publishing if the Maven Central namespace is different.
+-
+ ## Publish locally
+ 
+ ```bash
+-./gradlew publishToMavenLocal
++bash ./gradlew publishToMavenLocal
+ ```
+ 
+ For a local staging repository under `build/staging-deploy`:
+ 
+ ```bash
+-./gradlew publish
++bash ./gradlew publish
+ ```
+ 
+-The Gradle build already creates the normal JAR, sources JAR, Javadoc JAR, Maven POM, and optional signatures for non-SNAPSHOT `publish` builds.
++The Gradle build creates the normal JAR, sources JAR, Javadoc JAR, Maven POM, and optional signatures for non-SNAPSHOT release builds.
+ 
+ ## Runtime dependencies
+ 
+@@ -42,6 +50,22 @@ The Gradle build already creates the normal JAR, sources JAR, Javadoc JAR, Maven
+ - `org.java-websocket:Java-WebSocket:1.5.2`
+ - `org.reflections:reflections:0.10.2`
+ 
++## Browser compatibility notes
++
++WebDriver BiDi is still a moving target across browser implementations. WD4J keeps the wire model close to the W3C protocol, but browser-specific behavior can still differ.
++
++### Chrome / Chromium
++
++WD4J has been used successfully with Chrome through the `MappingTab` integration. In that setup, rapid consecutive navigations did not show the same browser-freeze behavior that was observed with Firefox.
++
++### Firefox / GeckoDriver
++
++Known limitations observed during development:
++
++- `session.unsubscribe` can be problematic in Firefox/GeckoDriver depending on the exact browser and driver version. WD4J first tries unsubscribe by subscription ID and falls back to unsubscribe by attributes when the ID-based request fails.
++- The current W3C draft defines `session.unsubscribe` as a union of unsubscribe-by-ID and unsubscribe-by-attributes. The ID variant uses `subscriptions`; the attributes variant currently uses `events`. WD4J still contains a deprecated optional `contexts` field for compatibility with older implementations.
++- Firefox was observed to hang during navigation when many navigations were sent in rapid succession. Prefer serial navigation, avoid flooding the browser with overlapping `browsingContext.navigate` commands, and consider using `WDReadinessState.NONE` or `WDReadinessState.INTERACTIVE` when full page-load waiting is not required.
++
+ ## License
+ 
+ MIT License. See `LICENSE`.
+diff --git a/build.gradle b/build.gradle
+index 81affc8..bef9ab5 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -6,13 +6,12 @@ plugins {
+     id 'com.gradleup.nmcp.aggregation' version '0.1.5'
+ }
+ 
+-group = findProperty('projectGroup') ?: 'de.bund.zrb'
++group = findProperty('projectGroup') ?: 'com.aresstack'
+ version = findProperty('projectVersion') ?: '5.4.0-SNAPSHOT'
+ 
+ java {
+-    toolchain {
+-        languageVersion = JavaLanguageVersion.of(8)
+-    }
++    sourceCompatibility = JavaVersion.VERSION_1_8
++    targetCompatibility = JavaVersion.VERSION_1_8
+     withSourcesJar()
+     withJavadocJar()
+ }
+@@ -33,6 +32,10 @@ dependencies {
+ 
+ tasks.withType(JavaCompile).configureEach {
+     options.encoding = 'UTF-8'
++
++    if (JavaVersion.current().isJava9Compatible()) {
++        options.release.set(8)
++    }
+ }
+ 
+ tasks.withType(Javadoc).configureEach {
+diff --git a/chatgpt-build.sh b/chatgpt-build.sh
+index c38efe9..dadc868 100644
+--- a/chatgpt-build.sh
++++ b/chatgpt-build.sh
+@@ -6,7 +6,7 @@ export GRADLE_USER_HOME="$ROOT_DIR/.chatgpt/gradle-home"
+ 
+ mkdir -p "$GRADLE_USER_HOME"
+ 
+-GRADLE_ARGS=(--no-daemon --offline)
++GRADLE_ARGS=(--no-daemon --offline --max-workers=2)
+ 
+ if [[ "${CHATGPT_FULL_GRADLE_BUILD:-false}" == "true" ]]; then
+   bash "$ROOT_DIR/gradlew" "${GRADLE_ARGS[@]}" clean build
+diff --git a/gradle.properties b/gradle.properties
+index aabacd9..550023b 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -1,4 +1,4 @@
+-projectGroup=de.bund.zrb
++projectGroup=com.aresstack
+ projectVersion=5.4.0-SNAPSHOT
+ artifactId=wd4j
+ 
+diff --git a/src/main/java/com/aresstack/WDWebSocketImpl.java b/src/main/java/com/aresstack/WDWebSocketImpl.java
+index 470a45b..7c76f67 100644
+--- a/src/main/java/com/aresstack/WDWebSocketImpl.java
++++ b/src/main/java/com/aresstack/WDWebSocketImpl.java
+@@ -13,8 +13,8 @@ import java.util.function.Consumer;
+ 
+ 
+ /**
+- * ToDo: WebSocket & WebSockeFrames wurden hier fälschlicherweise eingesetzt. Sie sind für Verbindungen der Seite selbst gedacht,
+- * nicht für DIE verbindung zum Browser über WebDriverBidi & WebSocket
++ * ToDo: WebSocket und WebSocket-Frames wurden hier fälschlicherweise eingesetzt. Sie sind für Verbindungen der Seite selbst gedacht,
++ * nicht für DIE verbindung zum Browser über WebDriver BiDi und WebSocket
+  *
+  */
+ public class WDWebSocketImpl implements WDWebSocket {
+diff --git a/src/main/java/com/aresstack/WDWebSocketManagerImpl.java b/src/main/java/com/aresstack/WDWebSocketManagerImpl.java
+index bf3a15a..caca37e 100644
+--- a/src/main/java/com/aresstack/WDWebSocketManagerImpl.java
++++ b/src/main/java/com/aresstack/WDWebSocketManagerImpl.java
+@@ -138,7 +138,7 @@ public class WDWebSocketManagerImpl implements WDWebSocketManager {
+ 
+     /**
+      * Sendet einen Befehl und wartet auf die Antwort.
+-     * receive nutzt den Dispatcher (Map<id, callback>), um die Antwort zu liefern.
++     * receive nutzt den Dispatcher ({@code Map<id, callback>}), um die Antwort zu liefern.
+      *
+      * @param command      Der Befehl, der gesendet wird.
+      * @param responseType Die Klasse des erwarteten DTOs.
+diff --git a/src/main/java/com/aresstack/command/request/WDScriptRequest.java b/src/main/java/com/aresstack/command/request/WDScriptRequest.java
+index 162bfe6..7ad98f1 100644
+--- a/src/main/java/com/aresstack/command/request/WDScriptRequest.java
++++ b/src/main/java/com/aresstack/command/request/WDScriptRequest.java
+@@ -59,7 +59,6 @@ public class WDScriptRequest {
+      * The script.callFunction command calls a provided function with given arguments in a given realm.
+      *
+      * RealmInfo can be either a realm or a navigable.
+-     * @param <T>
+      */
+     public static class CallFunction extends WDCommandImpl<CallFunctionParameters> implements WDCommandData {
+         public CallFunction(String functionDeclaration, boolean awaitPromise, WDTarget target) {
+diff --git a/src/main/java/com/aresstack/command/request/WDStorageRequest.java b/src/main/java/com/aresstack/command/request/WDStorageRequest.java
+index 0d403b8..ef26967 100644
+--- a/src/main/java/com/aresstack/command/request/WDStorageRequest.java
++++ b/src/main/java/com/aresstack/command/request/WDStorageRequest.java
+@@ -37,7 +37,7 @@ public class WDStorageRequest {
+ 
+     /**
+      * The storage.setCookie command creates a new cookie in a cookie store, replacing any cookie in that store which
+-     * matches according to {@link https://httpwg.org/specs/rfc6265.html [COOKIES]}.
++     * matches according to the HTTP cookie specification.
+      */
+     public static class SetCookie extends WDCommandImpl<SetCookieParameters> implements WDCommandData {
+         public SetCookie(String contextId, SetCookieParameters.PartialCookie cookie) {
+diff --git a/src/main/java/com/aresstack/manager/WDBrowsingContextManager.java b/src/main/java/com/aresstack/manager/WDBrowsingContextManager.java
+index 00a221b..048153d 100644
+--- a/src/main/java/com/aresstack/manager/WDBrowsingContextManager.java
++++ b/src/main/java/com/aresstack/manager/WDBrowsingContextManager.java
+@@ -152,7 +152,7 @@ public class WDBrowsingContextManager implements WDModule {
+     /**
+      * Captures a screenshot of the given browsing context.
+      *
+-     * @param contextId The ID of the context to capture a screenshot from.
++     * @param context The context to capture a screenshot from.
+      * @return The screenshot as a base64-encoded string.
+      */
+     public WDBrowsingContextResult.CaptureScreenshotResult captureScreenshot(WDBrowsingContext context, CaptureScreenshotParameters.Origin origin, CaptureScreenshotParameters.ImageFormat format, CaptureScreenshotParameters.ClipRectangle clip) {
+diff --git a/src/main/java/com/aresstack/manager/WDSessionManager.java b/src/main/java/com/aresstack/manager/WDSessionManager.java
+index 53b7c3f..78853eb 100644
+--- a/src/main/java/com/aresstack/manager/WDSessionManager.java
++++ b/src/main/java/com/aresstack/manager/WDSessionManager.java
+@@ -26,7 +26,6 @@ public class WDSessionManager implements WDModule {
+      * Damit das Verhalten konsistent ist, wird ein neuer Kontext erstellt, wenn kein Standard-Kontext gefunden wird.
+      *
+      * @param WDWebSocketManager The high-level api
+-     * @return Die erstellte Session
+      */
+     public WDSessionManager(WDWebSocketManager WDWebSocketManager) throws ExecutionException, InterruptedException {
+         this.WDWebSocketManager = WDWebSocketManager;

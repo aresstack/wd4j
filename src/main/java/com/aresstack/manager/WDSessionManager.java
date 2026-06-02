@@ -26,7 +26,6 @@ public class WDSessionManager implements WDModule {
      * Damit das Verhalten konsistent ist, wird ein neuer Kontext erstellt, wenn kein Standard-Kontext gefunden wird.
      *
      * @param WDWebSocketManager The high-level api
-     * @return Die erstellte Session
      */
     public WDSessionManager(WDWebSocketManager WDWebSocketManager) throws ExecutionException, InterruptedException {
         this.WDWebSocketManager = WDWebSocketManager;

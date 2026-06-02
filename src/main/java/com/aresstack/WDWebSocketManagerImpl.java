@@ -138,7 +138,7 @@ public class WDWebSocketManagerImpl implements WDWebSocketManager {
 
     /**
      * Sendet einen Befehl und wartet auf die Antwort.
-     * receive nutzt den Dispatcher (Map<id, callback>), um die Antwort zu liefern.
+     * receive nutzt den Dispatcher ({@code Map<id, callback>}), um die Antwort zu liefern.
      *
      * @param command      Der Befehl, der gesendet wird.
      * @param responseType Die Klasse des erwarteten DTOs.

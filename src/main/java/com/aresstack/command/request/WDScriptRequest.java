@@ -59,7 +59,6 @@ public class WDScriptRequest {
      * The script.callFunction command calls a provided function with given arguments in a given realm.
      *
      * RealmInfo can be either a realm or a navigable.
-     * @param <T>
      */
     public static class CallFunction extends WDCommandImpl<CallFunctionParameters> implements WDCommandData {
         public CallFunction(String functionDeclaration, boolean awaitPromise, WDTarget target) {

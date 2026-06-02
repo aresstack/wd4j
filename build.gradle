@@ -6,13 +6,12 @@ plugins {
     id 'com.gradleup.nmcp.aggregation' version '0.1.5'
 }
 
-group = findProperty('projectGroup') ?: 'de.bund.zrb'
+group = findProperty('projectGroup') ?: 'com.aresstack'
 version = findProperty('projectVersion') ?: '5.4.0-SNAPSHOT'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
-    }
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
     withJavadocJar()
 }
@@ -33,6 +32,10 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release.set(8)
+    }
 }
 
 tasks.withType(Javadoc).configureEach {

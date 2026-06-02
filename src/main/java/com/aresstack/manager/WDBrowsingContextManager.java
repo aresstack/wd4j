@@ -152,7 +152,7 @@ public class WDBrowsingContextManager implements WDModule {
     /**
      * Captures a screenshot of the given browsing context.
      *
-     * @param contextId The ID of the context to capture a screenshot from.
+     * @param context The context to capture a screenshot from.
      * @return The screenshot as a base64-encoded string.
      */
     public WDBrowsingContextResult.CaptureScreenshotResult captureScreenshot(WDBrowsingContext context, CaptureScreenshotParameters.Origin origin, CaptureScreenshotParameters.ImageFormat format, CaptureScreenshotParameters.ClipRectangle clip) {
