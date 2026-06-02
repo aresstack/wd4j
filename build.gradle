@@ -2,6 +2,8 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
+    id 'com.gradleup.nmcp' version '0.1.5'
+    id 'com.gradleup.nmcp.aggregation' version '0.1.5'
 }
 
 group = findProperty('projectGroup') ?: 'de.bund.zrb'
@@ -69,7 +71,7 @@ publishing {
             pom {
                 name = findProperty('pomName') ?: 'wd4j'
                 description = findProperty('pomDescription') ?: 'Java 8 WebDriver BiDi bindings.'
-                url = findProperty('pomUrl') ?: 'https://github.com/AresStack/wd4j'
+                url = findProperty('pomUrl') ?: 'https://github.com/aresstack/wd4j'
 
                 licenses {
                     license {
@@ -86,9 +88,9 @@ publishing {
                 }
 
                 scm {
-                    connection = findProperty('pomScmConnection') ?: 'scm:git:https://github.com/AresStack/wd4j.git'
+                    connection = findProperty('pomScmConnection') ?: 'scm:git:https://github.com/aresstack/wd4j.git'
                     developerConnection = findProperty('pomScmDeveloperConnection') ?: 'scm:git:ssh://git@github.com/AresStack/wd4j.git'
-                    url = findProperty('pomScmUrl') ?: 'https://github.com/AresStack/wd4j'
+                    url = findProperty('pomScmUrl') ?: 'https://github.com/aresstack/wd4j'
                 }
             }
         }
@@ -104,7 +106,48 @@ publishing {
 
 signing {
     required {
-        !version.toString().endsWith('-SNAPSHOT') && gradle.taskGraph.hasTask('publish')
+        !version.toString().endsWith('-SNAPSHOT') && gradle.taskGraph.allTasks.any { task ->
+            task.name == 'publish'
+                    || task.name == 'publishAllPublicationsToCentralPortal'
+                    || task.path.endsWith(':publishAllPublicationsToCentralPortal')
+        }
+    }
+
+    def signingKey = providers.gradleProperty('signingInMemoryKey').orNull
+    def signingPassword = providers.gradleProperty('signingInMemoryKeyPassword').orNull
+    if (signingKey != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
     }
     sign publishing.publications.mavenJava
+}
+
+
+// --------------------------------------------------------------------
+// Maven Central publishing (Sonatype Central Portal via nmcp)
+// --------------------------------------------------------------------
+//
+// Local verification:
+//   ./gradlew publishToMavenLocal
+//
+// Release upload:
+//   ./gradlew -PprojectVersion=5.4.0 publishAllPublicationsToCentralPortal
+//
+// Required Gradle properties for a real release:
+//   centralUsername                  Sonatype Central Portal user-token
+//   centralPassword                  Sonatype Central Portal password-token
+//   signingInMemoryKey               ASCII-armored GPG private key
+//   signingInMemoryKeyPassword       GPG passphrase
+//
+// In GitHub Actions these are supplied as ORG_GRADLE_PROJECT_* environment
+// variables so they never have to be committed to the repository.
+dependencies {
+    nmcpAggregation(project(':'))
+}
+
+nmcpAggregation {
+    publishAllProjectsProbablyBreakingProjectIsolation {
+        username = providers.gradleProperty('centralUsername')
+        password = providers.gradleProperty('centralPassword')
+        publishingType = 'AUTOMATIC'
+    }
 }
