@@ -1,0 +1,22 @@
+package com.aresstack.type.emulation;
+
+import com.aresstack.support.mapping.EnumWrapper;
+
+/**
+ * Represent the WebDriver BiDi emulation.ForcedColorsModeTheme.
+ */
+public enum WDForcedColorsModeTheme implements EnumWrapper {
+    LIGHT("light"),
+    DARK("dark");
+
+    private final String value;
+
+    WDForcedColorsModeTheme(String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String value() {
+        return value;
+    }
+}
