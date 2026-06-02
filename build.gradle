@@ -50,7 +50,7 @@ tasks.withType(AbstractArchiveTask).configureEach {
 
 jar {
     manifest {
-        attributes('Automatic-Module-Name': 'de.bund.zrb.wd4j')
+        attributes('Automatic-Module-Name': 'com.aresstack.wd4j')
     }
 }
 

@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import com.aresstack.api.markerInterfaces.WDModule;
 import com.aresstack.type.browsingContext.WDBrowsingContext;
 import com.aresstack.type.browsingContext.WDNavigation;
-import de.bund.zrb.type.network.*;
+import com.aresstack.type.network.*;
 import com.aresstack.websocket.WDEvent;
 import com.aresstack.websocket.WDEventNames;
 

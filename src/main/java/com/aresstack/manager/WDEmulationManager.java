@@ -8,11 +8,11 @@ import com.aresstack.type.emulation.WDForcedColorsModeTheme;
 import com.aresstack.type.emulation.WDGeolocationCoordinates;
 import com.aresstack.type.emulation.WDGeolocationPositionError;
 import com.aresstack.type.emulation.WDScreenOrientation;
-import de.bund.zrb.command.request.parameters.emulation.*;
+import com.aresstack.command.request.parameters.emulation.*;
 import com.aresstack.command.response.WDEmptyResult;
 import com.aresstack.type.browsingContext.WDBrowsingContext;
 import com.aresstack.type.browser.WDUserContext;
-import de.bund.zrb.type.emulation.*;
+import com.aresstack.type.emulation.*;
 
 import java.util.List;
 

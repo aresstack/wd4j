@@ -1,7 +1,7 @@
 package com.aresstack.command.request.parameters.network;
 
 import com.aresstack.api.WDCommand;
-import de.bund.zrb.type.network.WDCollector;
+import com.aresstack.type.network.WDCollector;
 import com.aresstack.type.network.WDDataType;
 import com.aresstack.type.network.WDRequest;
 

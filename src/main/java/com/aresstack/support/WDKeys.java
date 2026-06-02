@@ -1,6 +1,5 @@
 package com.aresstack.support;
 
-// de.bund.zrb.input.WDKeys (oder wohin es bei dir passt)
 public final class WDKeys {
     private WDKeys() {}
     public static final String NULL        = "\uE000";

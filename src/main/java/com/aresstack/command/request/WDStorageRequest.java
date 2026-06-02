@@ -3,7 +3,7 @@ package com.aresstack.command.request;
 import com.aresstack.api.markerInterfaces.WDCommandData;
 import com.aresstack.command.request.helper.WDCommandImpl;
 import com.aresstack.command.request.parameters.storage.*;
-import de.bund.zrb.command.request.parameters.storage.*;
+import com.aresstack.command.request.parameters.storage.*;
 import com.aresstack.type.browsingContext.WDBrowsingContext;
 
 public class WDStorageRequest {

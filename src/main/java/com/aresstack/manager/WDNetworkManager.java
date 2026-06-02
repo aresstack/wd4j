@@ -129,7 +129,7 @@ public class WDNetworkManager implements WDModule {
     // === UPDATED TO NEW SPECS ===
 
     /** Add a data collector. */
-    public de.bund.zrb.type.network.WDCollector addDataCollector(List<WDDataType> dataTypes, int maxEncodedDataSize) {
+    public com.aresstack.type.network.WDCollector addDataCollector(List<WDDataType> dataTypes, int maxEncodedDataSize) {
         WDNetworkResult.AddDataCollectorResult result =
                 WDWebSocketManager.sendAndWaitForResponse(
                         new WDNetworkRequest.AddDataCollector(dataTypes, maxEncodedDataSize),
@@ -139,7 +139,7 @@ public class WDNetworkManager implements WDModule {
     }
 
     /** Convenience: Add a response body collector for all contexts. */
-    public de.bund.zrb.type.network.WDCollector addResponseBodyCollector(int maxEncodedDataSize) {
+    public com.aresstack.type.network.WDCollector addResponseBodyCollector(int maxEncodedDataSize) {
         List<WDDataType> types = java.util.Collections.singletonList(WDDataType.RESPONSE);
         return addDataCollector(types, maxEncodedDataSize);
     }
@@ -147,7 +147,7 @@ public class WDNetworkManager implements WDModule {
     /** Get collected data (bytes) for a request. Set disown=true to release association. */
     public WDBytesValue getData(WDDataType dataType,
                                 WDRequest request,
-                                de.bund.zrb.type.network.WDCollector collector,
+                                com.aresstack.type.network.WDCollector collector,
                                 Boolean disown) {
         WDNetworkGetDataResult result =
                 WDWebSocketManager.sendAndWaitForResponse(
@@ -161,7 +161,7 @@ public class WDNetworkManager implements WDModule {
 
     /** Disown previously collected data for a given request and collector. */
     public void disownData(WDDataType dataType,
-                           de.bund.zrb.type.network.WDCollector collector,
+                           com.aresstack.type.network.WDCollector collector,
                            WDRequest request) {
         WDWebSocketManager.sendAndWaitForResponse(
                 new WDNetworkRequest.DisownData(dataType, collector, request),
@@ -170,7 +170,7 @@ public class WDNetworkManager implements WDModule {
     }
 
     /** Remove a data collector. */
-    public void removeDataCollector(de.bund.zrb.type.network.WDCollector collector) {
+    public void removeDataCollector(com.aresstack.type.network.WDCollector collector) {
         WDWebSocketManager.sendAndWaitForResponse(
                 new WDNetworkRequest.RemoveDataCollector(collector),
                 WDEmptyResult.class

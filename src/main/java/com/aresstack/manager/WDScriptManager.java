@@ -7,7 +7,7 @@ import com.aresstack.command.response.WDScriptResult;
 import com.aresstack.type.browser.WDUserContext;
 import com.aresstack.type.browsingContext.WDBrowsingContext;
 import com.aresstack.type.script.*;
-import de.bund.zrb.type.script.*;
+import com.aresstack.type.script.*;
 import com.aresstack.api.WDWebSocketManager;
 
 import java.util.List;

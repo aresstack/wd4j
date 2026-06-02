@@ -4,10 +4,8 @@ import com.aresstack.api.markerInterfaces.WDCommandData;
 import com.aresstack.command.request.helper.WDCommandImpl;
 import com.aresstack.command.request.parameters.script.*;
 import com.aresstack.type.script.*;
-import de.bund.zrb.command.request.parameters.script.*;
 import com.aresstack.type.browser.WDUserContext;
 import com.aresstack.type.browsingContext.WDBrowsingContext;
-import de.bund.zrb.type.script.*;
 
 import java.util.Collections;
 import java.util.List;

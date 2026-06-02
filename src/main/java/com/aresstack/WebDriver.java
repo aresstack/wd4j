@@ -4,7 +4,7 @@ import com.aresstack.api.WDWebSocket;
 import com.aresstack.api.WDWebSocketManager;
 import com.aresstack.command.response.WDSessionResult;
 import com.aresstack.manager.*;
-import de.bund.zrb.manager.*;
+import com.aresstack.manager.*;
 import com.aresstack.service.WDEventDispatcher;
 import com.aresstack.type.session.WDCapabilitiesRequest;
 import com.aresstack.type.session.WDSubscription;

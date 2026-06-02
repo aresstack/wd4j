@@ -17,13 +17,13 @@ public interface WDNetworkResult extends WDResultData {
     }
 
     class AddDataCollectorResult implements WDNetworkResult {
-        de.bund.zrb.type.network.WDCollector collector;
+        com.aresstack.type.network.WDCollector collector;
 
-        public AddDataCollectorResult(de.bund.zrb.type.network.WDCollector collector) {
+        public AddDataCollectorResult(com.aresstack.type.network.WDCollector collector) {
             this.collector = collector;
         }
 
-        public de.bund.zrb.type.network.WDCollector getCollector() {
+        public com.aresstack.type.network.WDCollector getCollector() {
             return collector;
         }
     }

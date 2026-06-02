@@ -4,9 +4,9 @@ import com.aresstack.api.markerInterfaces.WDCommandData;
 import com.aresstack.command.request.helper.WDCommandImpl;
 import com.aresstack.command.request.parameters.network.*;
 import com.aresstack.type.network.*;
-import de.bund.zrb.command.request.parameters.network.*;
+import com.aresstack.command.request.parameters.network.*;
 import com.aresstack.type.browsingContext.WDBrowsingContext;
-import de.bund.zrb.type.network.*;
+import com.aresstack.type.network.*;
 
 import java.util.List;
 
@@ -121,7 +121,7 @@ public class WDNetworkRequest {
     }
 
     public static class DisownData extends WDCommandImpl<DisownDataParameters> implements WDCommandData {
-        public DisownData(WDDataType dataType, de.bund.zrb.type.network.WDCollector collector, WDRequest request) {
+        public DisownData(WDDataType dataType, com.aresstack.type.network.WDCollector collector, WDRequest request) {
             super("network.disownData", new DisownDataParameters(dataType, collector, request));
         }
         public DisownData(DisownDataParameters params) {
@@ -131,9 +131,9 @@ public class WDNetworkRequest {
 
     public static class RemoveDataCollector extends WDCommandImpl<RemoveDataCollectorParameters> implements WDCommandData {
         public RemoveDataCollector(String collectorId) {
-            super("network.removeDataCollector", new RemoveDataCollectorParameters(new de.bund.zrb.type.network.WDCollector(collectorId)));
+            super("network.removeDataCollector", new RemoveDataCollectorParameters(new com.aresstack.type.network.WDCollector(collectorId)));
         }
-        public RemoveDataCollector(de.bund.zrb.type.network.WDCollector collector) {
+        public RemoveDataCollector(com.aresstack.type.network.WDCollector collector) {
             super("network.removeDataCollector", new RemoveDataCollectorParameters(collector));
         }
     }
