@@ -1,4 +1,4 @@
-package de.bund.zrb.type.network;
+package de.bund.zrb;
 
 import de.bund.zrb.support.mapping.StringWrapper;
 

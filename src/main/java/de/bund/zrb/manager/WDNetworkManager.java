@@ -129,18 +129,18 @@ public class WDNetworkManager implements WDModule {
     // === UPDATED TO NEW SPECS ===
 
     /** Add a data collector. */
-    public de.bund.zrb.type.network.WDCollector addDataCollector(java.util.List<de.bund.zrb.type.network.WDDataType> dataTypes, int maxEncodedDataSize) {
-        de.bund.zrb.command.response.WDNetworkResult.AddDataCollectorResult result =
+    public de.bund.zrb.type.network.WDCollector addDataCollector(List<de.bund.zrb.type.network.WDDataType> dataTypes, int maxEncodedDataSize) {
+        WDNetworkResult.AddDataCollectorResult result =
                 WDWebSocketManager.sendAndWaitForResponse(
-                        new de.bund.zrb.command.request.WDNetworkRequest.AddDataCollector(dataTypes, maxEncodedDataSize),
-                        de.bund.zrb.command.response.WDNetworkResult.AddDataCollectorResult.class
+                        new WDNetworkRequest.AddDataCollector(dataTypes, maxEncodedDataSize),
+                        WDNetworkResult.AddDataCollectorResult.class
                 );
         return result.getCollector();
     }
 
     /** Convenience: Add a response body collector for all contexts. */
     public de.bund.zrb.type.network.WDCollector addResponseBodyCollector(int maxEncodedDataSize) {
-        java.util.List<de.bund.zrb.type.network.WDDataType> types = java.util.Collections.singletonList(de.bund.zrb.type.network.WDDataType.RESPONSE);
+        List<de.bund.zrb.type.network.WDDataType> types = java.util.Collections.singletonList(de.bund.zrb.type.network.WDDataType.RESPONSE);
         return addDataCollector(types, maxEncodedDataSize);
     }
 
@@ -148,10 +148,10 @@ public class WDNetworkManager implements WDModule {
     public de.bund.zrb.type.network.WDBytesValue getData(de.bund.zrb.type.network.WDDataType dataType,
                                                          de.bund.zrb.type.network.WDRequest request,
                                                          de.bund.zrb.type.network.WDCollector collector,
-                                                         java.lang.Boolean disown) {
+                                                         Boolean disown) {
         de.bund.zrb.command.response.WDNetworkGetDataResult result =
                 WDWebSocketManager.sendAndWaitForResponse(
-                        new de.bund.zrb.command.request.WDNetworkRequest.GetData(
+                        new WDNetworkRequest.GetData(
                                 new de.bund.zrb.command.request.parameters.network.GetDataParameters(dataType, collector, disown, request)
                         ),
                         de.bund.zrb.command.response.WDNetworkGetDataResult.class
@@ -164,24 +164,24 @@ public class WDNetworkManager implements WDModule {
                            de.bund.zrb.type.network.WDCollector collector,
                            de.bund.zrb.type.network.WDRequest request) {
         WDWebSocketManager.sendAndWaitForResponse(
-                new de.bund.zrb.command.request.WDNetworkRequest.DisownData(dataType, collector, request),
-                de.bund.zrb.command.response.WDEmptyResult.class
+                new WDNetworkRequest.DisownData(dataType, collector, request),
+                WDEmptyResult.class
         );
     }
 
     /** Remove a data collector. */
     public void removeDataCollector(de.bund.zrb.type.network.WDCollector collector) {
         WDWebSocketManager.sendAndWaitForResponse(
-                new de.bund.zrb.command.request.WDNetworkRequest.RemoveDataCollector(collector),
-                de.bund.zrb.command.response.WDEmptyResult.class
+                new WDNetworkRequest.RemoveDataCollector(collector),
+                WDEmptyResult.class
         );
     }
 
     /** Set extra headers for matching contexts/userContexts. */
-    public void setExtraHeaders(java.util.List<de.bund.zrb.type.network.WDHeader> headers) {
+    public void setExtraHeaders(List<de.bund.zrb.type.network.WDHeader> headers) {
         WDWebSocketManager.sendAndWaitForResponse(
-                new de.bund.zrb.command.request.WDNetworkRequest.SetExtraHeaders(headers),
-                de.bund.zrb.command.response.WDEmptyResult.class
+                new WDNetworkRequest.SetExtraHeaders(headers),
+                WDEmptyResult.class
         );
     }
 }

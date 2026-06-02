@@ -55,13 +55,13 @@ public interface WDLocalValue {
             List<WDLocalValue> converted = list.stream()
                     .map(WDLocalValue::fromObject)
                     .collect(Collectors.toList());
-            return new WDLocalValue.ArrayLocalValue(converted);
+            return new ArrayLocalValue(converted);
 
         } else if (arg instanceof Set<?>) {
             List<WDLocalValue> converted = ((Set<?>) arg).stream()
                     .map(WDLocalValue::fromObject)
                     .collect(Collectors.toList());
-            return new WDLocalValue.SetLocalValue(converted);
+            return new SetLocalValue(converted);
 
         } else if (arg instanceof Map<?, ?>) {
             Map<?, ?> map = (Map<?, ?>) arg;
@@ -71,11 +71,11 @@ public interface WDLocalValue {
                 WDLocalValue value = fromObject(entry.getValue());
                 converted.put(key, value);
             }
-            return new WDLocalValue.MapLocalValue(converted);
+            return new MapLocalValue(converted);
 
         } else if (arg instanceof Date) {
             // ISO 8601-Format, wie es BiDi erwartet
-            return new WDLocalValue.DateLocalValue(((Date) arg).toInstant().toString());
+            return new DateLocalValue(((Date) arg).toInstant().toString());
         }
 
         throw new IllegalArgumentException("Unsupported argument type: " + arg.getClass().getName());

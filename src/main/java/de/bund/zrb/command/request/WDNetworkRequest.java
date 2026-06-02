@@ -101,7 +101,7 @@ public class WDNetworkRequest {
     // === UPDATED TO NEW SPECS ===
 
     public static class AddDataCollector extends WDCommandImpl<AddDataCollectorParameters> implements WDCommandData {
-        public AddDataCollector(java.util.List<de.bund.zrb.type.network.WDDataType> dataTypes, int maxEncodedDataSize) {
+        public AddDataCollector(List<WDDataType> dataTypes, int maxEncodedDataSize) {
             super("network.addDataCollector", new AddDataCollectorParameters(dataTypes, maxEncodedDataSize));
         }
         public AddDataCollector(AddDataCollectorParameters params) {
@@ -110,7 +110,7 @@ public class WDNetworkRequest {
     }
 
     public static class GetData extends WDCommandImpl<GetDataParameters> implements WDCommandData {
-        public GetData(de.bund.zrb.type.network.WDDataType dataType, de.bund.zrb.type.network.WDRequest request) {
+        public GetData(WDDataType dataType, WDRequest request) {
             super("network.getData", new GetDataParameters(dataType, request));
         }
         public GetData(GetDataParameters params) {
@@ -119,7 +119,7 @@ public class WDNetworkRequest {
     }
 
     public static class DisownData extends WDCommandImpl<DisownDataParameters> implements WDCommandData {
-        public DisownData(de.bund.zrb.type.network.WDDataType dataType, de.bund.zrb.type.network.WDCollector collector, de.bund.zrb.type.network.WDRequest request) {
+        public DisownData(WDDataType dataType, de.bund.zrb.type.network.WDCollector collector, WDRequest request) {
             super("network.disownData", new DisownDataParameters(dataType, collector, request));
         }
         public DisownData(DisownDataParameters params) {
@@ -137,7 +137,7 @@ public class WDNetworkRequest {
     }
 
     public static class SetExtraHeaders extends WDCommandImpl<SetExtraHeadersParameters> implements WDCommandData {
-        public SetExtraHeaders(java.util.List<de.bund.zrb.type.network.WDHeader> headers) {
+        public SetExtraHeaders(List<WDHeader> headers) {
             super("network.setExtraHeaders", new SetExtraHeadersParameters(headers));
         }
         public SetExtraHeaders(SetExtraHeadersParameters params) {

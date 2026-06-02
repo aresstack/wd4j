@@ -23,7 +23,7 @@ public class WDNetworkEvent implements WDModule {
         private String method = WDEventNames.AUTH_REQUIRED.getName();
 
         public AuthRequired(JsonObject json) {
-            super(json, AuthRequired.AuthRequiredParametersWD.class);
+            super(json, AuthRequiredParametersWD.class);
         }
 
         @Override
@@ -51,7 +51,7 @@ public class WDNetworkEvent implements WDModule {
         private String method = WDEventNames.BEFORE_REQUEST_SENT.getName();
 
         public BeforeRequestSent(JsonObject json) {
-            super(json, BeforeRequestSent.BeforeRequestSentParametersWD.class);
+            super(json, BeforeRequestSentParametersWD.class);
         }
 
         @Override
@@ -90,7 +90,7 @@ public class WDNetworkEvent implements WDModule {
         private String method = WDEventNames.FETCH_ERROR.getName();
 
         public FetchError(JsonObject json) {
-            super(json, FetchError.FetchErrorParametersWD.class);
+            super(json, FetchErrorParametersWD.class);
         }
 
         @Override
@@ -129,7 +129,7 @@ public class WDNetworkEvent implements WDModule {
         private String method = WDEventNames.RESPONSE_COMPLETED.getName();
 
         public ResponseCompleted(JsonObject json) {
-            super(json, ResponseCompleted.ResponseCompletedParametersWD.class);
+            super(json, ResponseCompletedParametersWD.class);
         }
 
         @Override
@@ -168,7 +168,7 @@ public class WDNetworkEvent implements WDModule {
         private String method = WDEventNames.RESPONSE_STARTED.getName();
 
         public ResponseStarted(JsonObject json) {
-            super(json, ResponseStarted.ResponseStartedParametersWD.class);
+            super(json, ResponseStartedParametersWD.class);
         }
 
         @Override

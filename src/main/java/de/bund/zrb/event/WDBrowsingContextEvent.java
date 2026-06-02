@@ -141,7 +141,7 @@ public class WDBrowsingContextEvent implements WDModule {
         private String method = WDEventNames.USER_PROMPT_CLOSED.getName();
 
         public UserPromptClosed(JsonObject json) {
-            super(json, UserPromptClosed.UserPromptClosedParameters.class);
+            super(json, UserPromptClosedParameters.class);
         }
 
         @Override
@@ -210,7 +210,7 @@ public class WDBrowsingContextEvent implements WDModule {
         private String method = WDEventNames.USER_PROMPT_OPENED.getName();
 
         public UserPromptOpened(JsonObject json) {
-            super(json, UserPromptOpened.UserPromptOpenedParameters.class);
+            super(json, UserPromptOpenedParameters.class);
         }
 
         @Override
