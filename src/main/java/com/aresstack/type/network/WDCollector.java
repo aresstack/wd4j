@@ -1,4 +1,4 @@
-package com.aresstack;
+package com.aresstack.type.network;
 
 import com.aresstack.support.mapping.StringWrapper;
 
