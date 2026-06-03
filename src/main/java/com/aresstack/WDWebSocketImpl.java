@@ -1,5 +1,7 @@
 package com.aresstack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.aresstack.api.WDWebSocket;
 import com.aresstack.api.WebSocketFrame;
 import org.java_websocket.client.WebSocketClient;
@@ -18,6 +20,8 @@ import java.util.function.Consumer;
  *
  */
 public class WDWebSocketImpl implements WDWebSocket {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDWebSocketImpl.class);
+
     private WebSocketClient webSocketClient;
     private boolean isClosed = false;
     private String url;
@@ -133,9 +137,7 @@ public class WDWebSocketImpl implements WDWebSocket {
         webSocketClient = new WebSocketClient(uri) {
             @Override
             public void onOpen(ServerHandshake handshakedata) {
-                if (Boolean.getBoolean("wd4j.log.browser")) {
-                    System.out.println("[Browser] WebSocket connected: " + handshakedata.getHttpStatusMessage());
-                }
+                LOGGER.debug("Browser WebSocket connected: {}", handshakedata.getHttpStatusMessage());
             }
 
             @Override
@@ -148,12 +150,10 @@ public class WDWebSocketImpl implements WDWebSocket {
                 System.setProperty("wd4j.stats.rx.count", String.valueOf(msgNum));
                 System.setProperty("wd4j.stats.rx.lastTimestamp", String.valueOf(now));
 
-                if (Boolean.getBoolean("wd4j.log.websocket")) {
-                    // Structured logging: show direction, message number, size, and truncated content
-                    String preview = message.length() > 200
-                            ? message.substring(0, 200) + "... (" + message.length() + " chars)"
-                            : message;
-                    System.out.println("[WebSocket] ← IN  #" + msgNum + " (" + message.length() + " chars): " + preview);
+                if (LOGGER.isTraceEnabled()) {
+                    // Log direction, message number, size, and truncated content.
+                    String preview = preview(message);
+                    LOGGER.trace("WebSocket inbound #{} ({} chars): {}", msgNum, message.length(), preview);
                 }
 
                 try {
@@ -168,7 +168,7 @@ public class WDWebSocketImpl implements WDWebSocket {
             @Override
             public void onClose(int code, String reason, boolean remote) {
                 isClosed = true;
-                System.out.println("WebSocket closed. Code: " + code + ", Reason: " + reason);
+                LOGGER.debug("WebSocket closed. Code: {}, Reason: {}", code, reason);
 
                 // Alle registrierten `onClose`-Listener mit `this` benachrichtigen
                 onCloseListeners.forEach(listener -> listener.accept(WDWebSocketImpl.this));
@@ -190,11 +190,9 @@ public class WDWebSocketImpl implements WDWebSocket {
                 System.setProperty("wd4j.stats.tx.count", String.valueOf(msgNum));
                 System.setProperty("wd4j.stats.tx.lastTimestamp", String.valueOf(now));
 
-                if (Boolean.getBoolean("wd4j.log.websocket")) {
-                    String preview = message.length() > 200
-                            ? message.substring(0, 200) + "... (" + message.length() + " chars)"
-                            : message;
-                    System.out.println("[WebSocket] → OUT #" + msgNum + " (" + message.length() + " chars): " + preview);
+                if (LOGGER.isTraceEnabled()) {
+                    String preview = preview(message);
+                    LOGGER.trace("WebSocket outbound #{} ({} chars): {}", msgNum, message.length(), preview);
                 }
                 super.send(message); // Die Nachricht wirklich senden
 
@@ -205,6 +203,16 @@ public class WDWebSocketImpl implements WDWebSocket {
         };
     }
 
+    private static String preview(String message) {
+        if (message == null) {
+            return "";
+        }
+        if (message.length() <= 200) {
+            return message;
+        }
+        return message.substring(0, 200) + "... (" + message.length() + " chars)";
+    }
+
     private void connect() throws InterruptedException {
         webSocketClient.connectBlocking();
     }
@@ -212,9 +220,7 @@ public class WDWebSocketImpl implements WDWebSocket {
     public void close() {
         isClosed = true;
         webSocketClient.close();
-        if (Boolean.getBoolean("wd4j.log.websocket")) {
-            System.out.println("WebSocket connection closed.");
-        }
+        LOGGER.debug("WebSocket connection closed.");
     }
 
     public boolean isConnected() {

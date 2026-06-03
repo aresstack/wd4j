@@ -1,5 +1,7 @@
 package com.aresstack.manager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.aresstack.api.markerInterfaces.WDModule;
 import com.aresstack.command.request.WDBrowserRequest;
 import com.aresstack.command.response.WDBrowserResult;
@@ -9,6 +11,8 @@ import com.aresstack.type.browser.WDUserContextInfo;
 import com.aresstack.api.WDWebSocketManager;
 
 public class WDBrowserManager implements WDModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDBrowserManager.class);
+
 
     private final WDWebSocketManager WDWebSocketManager;
 
@@ -30,7 +34,7 @@ public class WDBrowserManager implements WDModule {
      */
     public void closeBrowser() {
         WDWebSocketManager.sendAndWaitForResponse(new WDBrowserRequest.Close(), WDEmptyResult.class);
-        System.out.println("Browser closed successfully.");
+        LOGGER.debug("Browser closed successfully.");
     }
 
     /**
@@ -41,7 +45,7 @@ public class WDBrowserManager implements WDModule {
     public WDUserContextInfo createUserContext() {
         WDUserContextInfo result =
                 WDWebSocketManager.sendAndWaitForResponse(new WDBrowserRequest.CreateUserContext(), WDUserContextInfo.class);
-        System.out.println("User context created: " + result.getUserContext().value());
+        LOGGER.debug("User context created: {}", result.getUserContext().value());
         return result;
     }
 
@@ -55,7 +59,7 @@ public class WDBrowserManager implements WDModule {
         WDBrowserResult.GetClientWindowsResult result =
                 WDWebSocketManager.sendAndWaitForResponse(new WDBrowserRequest.GetClientWindows(), WDBrowserResult.GetClientWindowsResult.class);
 
-        System.out.println("Client windows retrieved: " + result.getClientWindows());
+        LOGGER.debug("Client windows retrieved: {}", result.getClientWindows());
         return result;
     }
 
@@ -70,7 +74,7 @@ public class WDBrowserManager implements WDModule {
         WDBrowserResult.GetUserContextsResult result =
                 WDWebSocketManager.sendAndWaitForResponse(new WDBrowserRequest.GetUserContexts(), WDBrowserResult.GetUserContextsResult.class);
 
-        System.out.println("User contexts retrieved: " + result.getUserContexts());
+        LOGGER.debug("User contexts retrieved: {}", result.getUserContexts());
         return result;
     }
 
@@ -83,7 +87,7 @@ public class WDBrowserManager implements WDModule {
      */
     public void removeUserContext(String contextId) {
         WDWebSocketManager.sendAndWaitForResponse(new WDBrowserRequest.RemoveUserContext(contextId), WDEmptyResult.class);
-        System.out.println("User context removed: " + contextId);
+        LOGGER.debug("User context removed: {}", contextId);
     }
 
     /**
@@ -95,7 +99,7 @@ public class WDBrowserManager implements WDModule {
      */
     public WDClientWindowInfo setClientWindowState(String clientWindowId, String state) {
         WDClientWindowInfo result = WDWebSocketManager.sendAndWaitForResponse(new WDBrowserRequest.SetClientWindowState(clientWindowId, state), WDClientWindowInfo.class);
-        System.out.println("Client window state set: " + result.getClientWindow().value());
+        LOGGER.debug("Client window state set: {}", result.getClientWindow().value());
         return result;
     }
 }

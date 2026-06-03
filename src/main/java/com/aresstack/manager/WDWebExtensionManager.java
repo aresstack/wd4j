@@ -1,5 +1,7 @@
 package com.aresstack.manager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.aresstack.api.markerInterfaces.WDModule;
 import com.aresstack.command.request.WDWebExtensionRequest;
 import com.aresstack.command.request.parameters.webExtension.ExtensionData;
@@ -10,6 +12,8 @@ import com.aresstack.api.WDWebSocketManager;
 import com.aresstack.command.response.WDEmptyResult;
 
 public class WDWebExtensionManager implements WDModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDWebExtensionManager.class);
+
 
     private final WDWebSocketManager WDWebSocketManager;
 
@@ -38,10 +42,10 @@ public class WDWebExtensionManager implements WDModule {
             WDWebExtensionResult.InstallResult result = WDWebSocketManager.sendAndWaitForResponse(
                     new WDWebExtensionRequest.Install(extensionData), WDWebExtensionResult.InstallResult.class
             );
-            System.out.println("Web extension installed: " + result.getExtension().value());
+            LOGGER.debug("Web extension installed: {}", result.getExtension().value());
             return result;
         } catch (RuntimeException e) {
-            System.out.println("Error installing web extension: " + e.getMessage());
+            LOGGER.warn("Error installing web extension.", e);
             throw e;
         }
     }
@@ -57,9 +61,9 @@ public class WDWebExtensionManager implements WDModule {
             WDWebSocketManager.sendAndWaitForResponse(
                     new WDWebExtensionRequest.Uninstall(extension), WDEmptyResult.class
             );
-            System.out.println("Web extension uninstalled: " + extension.value());
+            LOGGER.debug("Web extension uninstalled: {}", extension.value());
         } catch (RuntimeException e) {
-            System.out.println("Error uninstalling web extension: " + e.getMessage());
+            LOGGER.warn("Error uninstalling web extension.", e);
             throw e;
         }
     }

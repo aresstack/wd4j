@@ -47,9 +47,49 @@ The Gradle build creates the normal JAR, sources JAR, Javadoc JAR, Maven POM, an
 ## Runtime dependencies
 
 - `com.google.code.gson:gson:2.8.9`
+- `org.slf4j:slf4j-api:1.7.32`
 - `org.java-websocket:Java-WebSocket:1.5.2`
 - `org.reflections:reflections:0.10.2`
 
+## Logging
+
+WD4J uses the Simple Logging Facade for Java (SLF4J) and does not use Log4J. The library depends only on `slf4j-api`; applications should provide their own logging backend. Logback is the recommended backend.
+
+Gradle example:
+
+```groovy
+implementation 'com.aresstack:wd4j:5.4.0'
+runtimeOnly 'ch.qos.logback:logback-classic:1.2.13'
+```
+
+Maven example:
+
+```xml
+<dependency>
+    <groupId>com.aresstack</groupId>
+    <artifactId>wd4j</artifactId>
+    <version>5.4.0</version>
+</dependency>
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.13</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+No `logback.xml` is shipped inside the library JAR, so WD4J does not override application logging configuration.
+
+Useful logger names:
+
+```text
+com.aresstack
+com.aresstack.WDWebSocketImpl
+com.aresstack.WDWebSocketManagerImpl
+com.aresstack.service.WDEventDispatcher
+```
+
+Set `com.aresstack.WDWebSocketImpl` to `TRACE` to inspect WebSocket payload flow.
 
 ## Navigation queue
 

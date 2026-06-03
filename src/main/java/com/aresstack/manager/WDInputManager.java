@@ -1,5 +1,7 @@
 package com.aresstack.manager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.aresstack.api.markerInterfaces.WDModule;
 import com.aresstack.command.request.WDInputRequest;
 import com.aresstack.command.request.parameters.input.sourceActions.SourceActions;
@@ -10,6 +12,8 @@ import com.aresstack.api.WDWebSocketManager;
 import java.util.List;
 
 public class WDInputManager implements WDModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDInputManager.class);
+
 
     private final WDWebSocketManager WDWebSocketManager;
 
@@ -47,7 +51,7 @@ public class WDInputManager implements WDModule {
         }
 
         WDWebSocketManager.sendAndWaitForResponse(new WDInputRequest.PerformActions(contextId, actions), WDEmptyResult.class);
-        System.out.println("Performed actions in context: " + contextId);
+        LOGGER.debug("Performed actions in context: {}", contextId);
     }
 
     /**
@@ -58,7 +62,7 @@ public class WDInputManager implements WDModule {
      */
     public void releaseActions(String contextId) {
         WDWebSocketManager.sendAndWaitForResponse(new WDInputRequest.ReleaseActions(contextId), WDEmptyResult.class);
-        System.out.println("Released actions in context: " + contextId);
+        LOGGER.debug("Released actions in context: {}", contextId);
     }
 
     /**
@@ -76,6 +80,6 @@ public class WDInputManager implements WDModule {
         }
 
         WDWebSocketManager.sendAndWaitForResponse(new WDInputRequest.SetFiles(contextId, sharedReference, files), WDEmptyResult.class);
-        System.out.println("Files set for element: " + sharedReference);
+        LOGGER.debug("Files set for element: {}", sharedReference);
     }
 }

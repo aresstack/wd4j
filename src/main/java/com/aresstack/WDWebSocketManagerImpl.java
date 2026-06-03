@@ -1,5 +1,7 @@
 package com.aresstack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -26,6 +28,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 public class WDWebSocketManagerImpl implements WDWebSocketManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDWebSocketManagerImpl.class);
+
     private final Gson gson = GsonMapperFactory.getGson(); // ✅ Nutzt zentrale Fabrik
 
     private final WDWebSocket webSocket;
@@ -343,11 +347,11 @@ public class WDWebSocketManagerImpl implements WDWebSocketManager {
                         try {
                             callback.accept(response);
                         } catch (Exception e) {
-                            System.err.println("[ERROR] Command callback error for id " + id + ": " + e.getMessage());
+                            LOGGER.error("Command callback error for id {}.", id, e);
                         }
 
                     } catch (JsonSyntaxException e) {
-                        System.out.println("[ERROR] JSON Parsing-Fehler: " + e.getMessage());
+                        LOGGER.error("Failed to parse WebSocket command response.", e);
                     }
                 }
             });
@@ -369,9 +373,7 @@ public class WDWebSocketManagerImpl implements WDWebSocketManager {
 
                 // Prüfen, ob es sich um ein Event handelt (kein "id"-Feld)
                 if (json.has("method")) {
-                    if (Boolean.getBoolean("wd4j.debug")) {
-                        System.out.println("[DEBUG] WebSocketManager detected event: " + json.get("method").getAsString());
-                    }
+                    LOGGER.debug("WebSocketManager detected event: {}", json.get("method").getAsString());
                     // Dispatch asynchronously to free the WebSocket thread immediately.
                     // This prevents browser freezes when event handlers (e.g. intercept
                     // continueResponse) take time or trigger further WebSocket sends.
@@ -381,13 +383,13 @@ public class WDWebSocketManagerImpl implements WDWebSocketManager {
                             try {
                                 eventDispatcher.processEvent(json);
                             } catch (Exception e) {
-                                System.err.println("[ERROR] Event dispatch error: " + e.getMessage());
+                                LOGGER.error("Event dispatch error.", e);
                             }
                         }
                     });
                 }
             } catch (JsonSyntaxException e) {
-                System.err.println("[ERROR] Failed to parse WebSocket event: " + e.getMessage());
+                LOGGER.error("Failed to parse WebSocket event.", e);
             }
         });
     }
@@ -430,27 +432,22 @@ public class WDWebSocketManagerImpl implements WDWebSocketManager {
                     if (currentCount == lastWatchdogMessageCount && pendingCount > 0) {
                         long silenceDuration = now - Math.max(lastReceived, lastWatchdogCheckTimestamp);
                         if (silenceDuration >= threshold) {
-                            System.err.println("[CONGESTION WARNING] WebSocket connection may be congested! "
-                                    + "No messages received for " + silenceDuration + " ms. "
-                                    + "Pending commands: " + pendingCount + ", "
-                                    + "Total received: " + currentCount + ", "
-                                    + "Total sent: " + ws.getMessagesSentCount() + ", "
-                                    + "Connected: " + ws.isConnected());
+                            LOGGER.warn("WebSocket connection may be congested. No messages received for {} ms. Pending commands: {}, total received: {}, total sent: {}, connected: {}",
+                                    silenceDuration, pendingCount, currentCount, ws.getMessagesSentCount(), ws.isConnected());
                         }
                     } else if (Boolean.getBoolean("wd4j.log.congestion")) {
                         // Heartbeat log: show throughput stats when congestion logging is enabled
                         long elapsed = now - lastWatchdogCheckTimestamp;
                         long newMessages = currentCount - lastWatchdogMessageCount;
-                        System.out.println("[CONGESTION OK] +" + newMessages + " msgs in " + elapsed + " ms"
-                                + " (total rx=" + currentCount + ", tx=" + ws.getMessagesSentCount()
-                                + ", pending=" + pendingCount + ")");
+                        LOGGER.debug("Congestion watchdog OK: +{} messages in {} ms (total rx={}, tx={}, pending={})",
+                                newMessages, elapsed, currentCount, ws.getMessagesSentCount(), pendingCount);
                     }
 
                     lastWatchdogMessageCount = currentCount;
                     lastWatchdogCheckTimestamp = now;
                 } catch (Exception e) {
                     // Watchdog must never crash
-                    System.err.println("[CONGESTION WATCHDOG] Error: " + e.getMessage());
+                    LOGGER.warn("Congestion watchdog failed.", e);
                 }
             }
         }, checkInterval, checkInterval, TimeUnit.MILLISECONDS);

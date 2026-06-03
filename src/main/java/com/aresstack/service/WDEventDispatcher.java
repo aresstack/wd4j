@@ -1,5 +1,7 @@
 package com.aresstack.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.aresstack.command.response.WDSessionResult;
@@ -22,6 +24,8 @@ import java.util.function.Consumer;
  * Keep type-based fan-out and add optional context-based fan-out.
  */
 public class WDEventDispatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDEventDispatcher.class);
+
     private final Gson gson = GsonMapperFactory.getGson(); // ToDo: Maybe removed
     private final BiFunction<String, JsonObject, Object> eventMapper;
 
@@ -41,7 +45,7 @@ public class WDEventDispatcher {
 
     public void processEvent(JsonObject jsonMessage) {
         if (!jsonMessage.has("method")) {
-            System.err.println("[WARN] Event received without method: " + jsonMessage);
+            LOGGER.warn("Event received without method: {}", jsonMessage);
             return;
         }
         final String method = jsonMessage.get("method").getAsString();
@@ -49,7 +53,7 @@ public class WDEventDispatcher {
 
         final WDEventNames eventEnum = WDEventNames.fromName(method);
         if (eventEnum == null) {
-            System.err.println("[WARN] No event mapping found for event: " + method);
+            LOGGER.warn("No event mapping found for event: {}", method);
             return;
         }
         dispatchEvent(eventEnum, params);
@@ -77,7 +81,7 @@ public class WDEventDispatcher {
                         l.accept(event);
                     } catch (Throwable t) {
                         // Log but do not break dispatch chain
-                        System.err.println("[WARN] Context event listener threw exception for " + eventEnum.getName() + ": " + t.getMessage());
+                        LOGGER.warn("Context event listener threw exception for {}.", eventEnum.getName(), t);
                     }
                 }
             }
@@ -92,14 +96,14 @@ public class WDEventDispatcher {
                     listener.accept(event);
                 } catch (Throwable t) {
                     // Log but do not break dispatch chain
-                    System.err.println("[WARN] Event listener threw exception for " + eventEnum.getName() + ": " + t.getMessage());
+                    LOGGER.warn("Event listener threw exception for {}.", eventEnum.getName(), t);
                 }
             }
         }
 
         if ((byContext == null || (ctxId != null && (byContext.get(ctxId) == null || byContext.get(ctxId).isEmpty())))
                 && (globals == null || globals.isEmpty())) {
-            System.out.println("[INFO] No listener registered for event: " + eventEnum.getName());
+            LOGGER.debug("No listener registered for event: {}", eventEnum.getName());
         }
     }
 
@@ -179,7 +183,7 @@ public class WDEventDispatcher {
             }
         }
 
-        System.out.println("[INFO] Removed listener for Subscription-ID: " + subscription.value());
+        LOGGER.debug("Removed listener for Subscription-ID: {}", subscription.value());
     }
 
     // -----------------------------------------------------------------------------------------------------------------

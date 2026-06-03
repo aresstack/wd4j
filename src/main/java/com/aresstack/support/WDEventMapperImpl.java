@@ -1,5 +1,7 @@
 package com.aresstack.support;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 import com.aresstack.api.EventMapper;
 import com.aresstack.websocket.WDEventNames;
@@ -15,6 +17,8 @@ import com.aresstack.event.WDInputEvent;
  * nun in der Page/Frame-Schicht über Adapter.
  */
 public class WDEventMapperImpl implements EventMapper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDEventMapperImpl.class);
+
 
     // Falls der alte Konstruktor beibehalten werden muss:
     // private final BrowserImpl browser;
@@ -27,9 +31,7 @@ public class WDEventMapperImpl implements EventMapper {
         WDEventNames eventMapping = WDEventNames.fromName(eventType);
         if (eventMapping == null) return null;
 
-        if (Boolean.getBoolean("wd4j.debug")) {
-            System.out.println("[DEBUG] Mapping event: " + eventType + " to: " + eventMapping);
-        }
+        LOGGER.debug("Mapping event: {} to: {}", eventType, eventMapping);
 
         switch (eventMapping) {
             // ── Browsing Context Events ────────────────────────────────────────────────

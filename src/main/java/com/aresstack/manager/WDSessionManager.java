@@ -1,5 +1,7 @@
 package com.aresstack.manager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.aresstack.api.markerInterfaces.WDModule;
 import com.aresstack.command.request.WDSessionRequest;
 import com.aresstack.command.request.parameters.session.parameters.UnsubscribeParameters;
@@ -16,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 public class WDSessionManager implements WDModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WDSessionManager.class);
+
     private final WDWebSocketManager WDWebSocketManager;
     private final Map<WDSubscriptionRequest, String> subscriptionIds = new ConcurrentHashMap<>();
     private final Set<String> subscribedEvents = new HashSet<>();
@@ -82,7 +86,7 @@ public class WDSessionManager implements WDModule {
 
         // Prüfe, ob genau diese Subscription bereits existiert
         if (subscriptionIds.containsKey(subscriptionRequest)) {
-            System.out.println("Subscription already exists for: " + subscriptionRequest);
+            LOGGER.debug("Subscription already exists for: {}", subscriptionRequest);
             return null;
         }
 
@@ -101,14 +105,14 @@ public class WDSessionManager implements WDModule {
         } else {
             // Fallback: use command ID (Firefox may not return subscription field in older versions)
             subscriptionId = subscribeCommand.getId().toString();
-            System.out.println("Warning: No Subscription-ID returned by remote end. Using command ID as fallback: " + subscriptionId);
+            LOGGER.warn("No Subscription-ID returned by remote end. Using command ID as fallback: {}", subscriptionId);
             result = new WDSessionResult.SubscribeResult(new WDSubscription(subscriptionId));
         }
 
         // Speichere die Subscription mit ihren vollen Kriterien
         subscriptionIds.put(subscriptionRequest, subscriptionId);
 
-        System.out.println("Subscribed to events: " + subscriptionRequest.getEvents() + " with Subscription-ID: " + subscriptionId);
+        LOGGER.debug("Subscribed to events: {} with Subscription-ID: {}", subscriptionRequest.getEvents(), subscriptionId);
 
         return result;
     }
@@ -140,7 +144,7 @@ public class WDSessionManager implements WDModule {
             WDWebSocketManager.sendAndWaitForResponse(unsubscribeRequest, WDEmptyResult.class);
             subscribedEvents.removeAll(eventsToRemove);
 
-            System.out.println("[INFO] Unsubscribed from events: " + eventsToRemove + " for contexts: " + contexts);
+            LOGGER.debug("Unsubscribed from events: {} for contexts: {}", eventsToRemove, contexts);
         }
     }
 
@@ -169,17 +173,16 @@ public class WDSessionManager implements WDModule {
             WDWebSocketManager.sendAndWaitForResponse(
                     new WDSessionRequest.Unsubscribe(unsubscribeParameters), WDEmptyResult.class);
 
-            System.out.println("Unsubscribed from event using Subscription-ID: " + subscription.value());
+            LOGGER.debug("Unsubscribed from event using Subscription-ID: {}", subscription.value());
         } catch (Exception e) {
             // Fallback: by-attributes (Firefox may not support by-ID yet)
-            System.out.println("Unsubscribe by ID failed (" + e.getMessage()
-                    + "), falling back to unsubscribe by attributes.");
+            LOGGER.warn("Unsubscribe by ID failed. Falling back to unsubscribe by attributes.", e);
 
             if (originalRequest != null) {
                 try {
                     unsubscribe(originalRequest.getEvents(), null);
                 } catch (Exception e2) {
-                    System.out.println("Unsubscribe by attributes also failed: " + e2.getMessage());
+                    LOGGER.warn("Unsubscribe by attributes also failed.", e2);
                 }
             }
         }
@@ -194,7 +197,7 @@ public class WDSessionManager implements WDModule {
     @Deprecated
     public void unsubscribeAll() {
         if (subscriptionIds.isEmpty()) {
-            System.out.println("No active subscriptions to remove.");
+            LOGGER.debug("No active subscriptions to remove.");
             return;
         }
 
@@ -214,6 +217,6 @@ public class WDSessionManager implements WDModule {
         // Leere die Subscription-Map
         subscriptionIds.clear();
 
-        System.out.println("Unsubscribed from all events.");
+        LOGGER.debug("Unsubscribed from all events.");
     }
 }

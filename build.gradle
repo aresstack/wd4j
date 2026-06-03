@@ -23,6 +23,7 @@ repositories {
 dependencies {
     api 'com.google.code.gson:gson:2.8.9'
 
+    implementation 'org.slf4j:slf4j-api:1.7.32'
     implementation 'org.java-websocket:Java-WebSocket:1.5.2'
     implementation 'org.reflections:reflections:0.10.2'
 
