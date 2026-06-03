@@ -1,23 +1,25 @@
 # WD4J Audit Report
 
-Audit basis: uploaded `wd4j-chatgpt-compatible.zip`.
+Audit basis: uploaded `wd4j-chatgpt-compatible.zip` and the follow-up changes that prepared the first Maven Central beta release.
 
 ## Summary
 
-The package structure is now consistent. Java package declarations match the source paths, the old `de.bund.zrb` package imports are gone, and the previously duplicated/misplaced network types are no longer present in the root package.
+The package structure is consistent. Java package declarations match the source paths, the old `de.bund.zrb` package imports are gone, and the previously duplicated or misplaced network types are no longer present in the root package.
 
-The most important build issue was that the Gradle build required a Java 8 toolchain. This prevents the ChatGPT-compatible package from building in an offline environment that only has a newer JDK. The proposed patch changes the Gradle build to produce Java 8 bytecode while allowing the build itself to run on Java 21.
+The Gradle build now produces Java 8 bytecode while allowing the build itself to run on a newer JDK. This keeps the library compatible with Java 8 consumers and also makes the ChatGPT-compatible ZIP usable in offline environments that only provide a newer JDK.
 
-## Applied fixes in the patch
+## Resolved items
 
-- Change Maven group metadata from `de.bund.zrb` to `com.aresstack`.
-- Replace the mandatory Gradle Java 8 toolchain with Java 8 source/target compatibility plus `--release 8` on JDK 9+.
-- Use `bash "$GITHUB_WORKSPACE/gradlew"` in the Maven Central release workflow.
-- Add `--max-workers=2` to `chatgpt-build.sh` to make sandbox builds less resource-hungry.
-- Expand the README with WebDriver BiDi browser compatibility notes.
-- Document the observed Firefox issues with `session.unsubscribe` and rapid consecutive navigations.
-- Document that Chrome/Chromium via `MappingTab` did not show the same freeze behavior.
-- Fix several Javadoc problems that caused warnings or invalid tags.
+- Maven metadata was changed from `de.bund.zrb` to `com.aresstack`.
+- The release version was set to `0.1.0-beta.1` for Maven Central.
+- The mandatory Gradle Java 8 toolchain was replaced with Java 8 source/target compatibility plus `--release 8` on JDK 9+.
+- The Maven Central release workflow uses `bash "$GITHUB_WORKSPACE/gradlew"`.
+- `chatgpt-build.sh` uses `--max-workers=2` to make sandbox builds less resource-hungry.
+- Several Javadoc problems that caused warnings or invalid tags were fixed.
+- Library `System.out.println` calls were replaced with SLF4J logging.
+- The library depends on `slf4j-api` only; applications provide their own backend, typically Logback.
+- Rapid consecutive `browsingContext.navigate` calls are handled by a per-browsing-context navigation queue.
+- The README documents Maven Central usage, logging, browser compatibility notes, and the navigation queue.
 
 ## Verification
 
@@ -46,6 +48,8 @@ Test result:
 
 - `BrowserWDRequestTest`: 4 tests passed
 - `SourceActionsTest`: 5 tests passed
+- `SerialWDNavigationQueueTest`: navigation queue behavior covered
+- `WDBrowsingContextManagerNavigationQueueTest`: manager integration covered
 - `WDLocalValueTest.testFromObject`: skipped
 
 Static checks:
@@ -54,21 +58,14 @@ Static checks:
 - No Java package/path mismatches in `src/test/java`.
 - No remaining `de.bund.zrb`, `de.zrb.bund`, or `com.aresstack.zrb` references.
 - No misplaced root-package `WDCollector`, `WDCollectorType`, or `WDDataType` duplicates.
+- No remaining `System.out.println` calls in `src/main/java`.
 
-## Remaining review notes
-
-### Logging
-
-There are still many `System.out.println` calls in library code. For Maven Central/library usage, these should eventually be replaced with a logging facade or with an injectable observer/callback mechanism.
+## Current review notes
 
 ### Event subscription state
 
-`WDSessionManager` still contains two subscription-state concepts: `subscriptionIds` and `subscribedEvents`. `subscribedEvents` is currently not used consistently. This is not blocking the build, but it is a design smell around event lifecycle management.
+`WDSessionManager` still contains two subscription-state concepts: `subscriptionIds` and `subscribedEvents`. `subscribedEvents` is currently not used consistently. This is not blocking the beta release, but it should be revisited before the API is considered stable.
 
 ### Firefox compatibility
 
-The W3C draft currently defines `session.unsubscribe` as a union of unsubscribe-by-ID and unsubscribe-by-attributes. Browser implementations can still differ because the WebDriver BiDi document is a Working Draft. The README now documents the observed Firefox/GeckoDriver issues and the recommended navigation throttling behavior.
-
-### Navigation flooding
-
-Rapid consecutive `browsingContext.navigate` calls should be treated as a compatibility-sensitive scenario. A future API improvement could add a navigation queue or a small strategy abstraction that serializes navigation commands per browsing context.
+The W3C draft currently defines `session.unsubscribe` as a union of unsubscribe-by-ID and unsubscribe-by-attributes. Browser implementations can still differ because the WebDriver BiDi document is a Working Draft. The README documents the observed Firefox/GeckoDriver issues and the recommended navigation throttling behavior.
